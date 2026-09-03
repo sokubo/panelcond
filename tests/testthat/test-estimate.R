@@ -38,3 +38,13 @@ test_that("pc_from_wide reproduces pc_simulate inputs", {
   f <- pc_estimate(inp$old, inp$new, k = inp$k, m = inp$m)
   expect_s3_class(f, "pc_estimate")
 })
+
+test_that("pc_increment recovers the dose increment under trait selection", {
+  set.seed(15)
+  a <- pc_simulate(n_old = 6000, n_new = 10, k = 12, regime = "MNAR_trait")
+  b <- pc_simulate(n_old = 6000, n_new = 10, k = 8,  regime = "MNAR_trait")
+  inc <- pc_increment(data.frame(y = a$old$y, y_entry = a$old$y_entry, s = a$old$s_prior),
+                      data.frame(y = b$old$y, y_entry = b$old$y_entry, s = b$old$s_prior), kA = 12, kB = 8)
+  truth <- a$truth[["pce_surv"]] - b$truth[["pce_surv"]]
+  expect_lt(abs(inc$ec_diff[["estimate"]] - truth), 3 * inc$ec_diff[["se"]] + 0.02)
+})

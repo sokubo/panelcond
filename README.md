@@ -27,5 +27,12 @@ inp <- pc_from_wide(wide, cohort = "entry_wave", resp = paste0("r_w", 1:19),
 pc_estimate(inp$old, inp$new, k = inp$k, m = inp$m)
 ```
 
+Two continuing cohorts from the same population (e.g. an original sample and a
+cohort-matched refreshment) with doses 12 and 8 at the same wave:
+
+```r
+pc_increment(A = data.frame(y, y_entry, s), B = data.frame(y, y_entry, s), kA = 12, kB = 8)
+```
+
 Methods are described in Okubo, S. (2026), *Panel conditioning as a dose–response
 causal effect: identification with refreshment samples*, working paper.

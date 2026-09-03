@@ -1,7 +1,7 @@
 Package: panelcond
 Type: Package
 Title: Refreshment-Sample Designs for Panel Conditioning
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: person("Shoki", "Okubo", email = "okubo080@toyo.jp", role = c("aut", "cre"),
                   comment = c(ORCID = "0009-0007-6925-5174"))
 Description: Estimates the panel conditioning effect (the causal effect of prior
