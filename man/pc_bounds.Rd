@@ -13,17 +13,29 @@ pc_bounds(fit, y_range, sd_new = NULL)
 proportion, \code{c(0, 100)} for a feeling thermometer).}
 
 \item{sd_new}{standard deviation of the fresh cohort's outcome, used to express
-the SM breakdown value in standard-deviation units; optional.}
+the SM breakdown value in standard-deviation units; optional, positive.}
 }
 \value{
-A list with \code{bounds} (lower, upper bound on the population PCE), and
-\code{breakdown}: \code{sm_std} (the SM estimate in SD units, which equals the violation
-of attrition exchangeability needed to explain it away) and \code{ec_rho_star}
-(the ratio of the wave-\code{t} to the entry-wave selection differential at which
-the EC estimate vanishes; values far from 1 are robust).
+A list with \code{bounds} (lower, upper bound on the population PCE, obtained
+by assigning the continuing-cohort members without an observed wave-\code{t}
+answer the endpoints of \code{y_range}) and \code{breakdown}: \code{sm_std} (the SM estimate
+in SD units, which equals the violation of attrition exchangeability, in SD
+units, needed to explain it away), \code{ec_eta_star} (the additive drift in the
+selection differential between entry and \code{t} at which the EC estimate
+vanishes; equal to the estimate itself), \code{ec_eta_ci95} (the drift at which the
+95\\% interval reaches zero; uses the bootstrap SE when available) and
+\code{ec_rho_star} (the ratio of the wave-\code{t} to the entry-wave selection
+differential at which the EC estimate vanishes; the further from 1, the
+larger the proportional change needed).
 }
 \description{
 Worst-case (Manski-type) bounds on the population conditioning effect that
 make no assumption about attrition, and breakdown values for the survival-
 matched and entry-wave estimators.
+}
+\examples{
+set.seed(1)
+sim <- pc_simulate(n_old = 2000, n_new = 500, k = 4)
+fit <- pc_estimate(sim$old, sim$new, k = 4)
+pc_bounds(fit, y_range = c(-4, 4), sd_new = sd(sim$new$y))
 }

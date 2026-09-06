@@ -12,11 +12,21 @@ pc_montecarlo(R = 200, ...)
 \item{...}{arguments passed to \code{\link[=pc_simulate]{pc_simulate()}}.}
 }
 \value{
-A data frame with one row per estimator: bias and RMSE relative to the
-estimator's own estimand (population PCE for IPW, survivor PCE otherwise),
-coverage of nominal 95\% intervals, and the rejection rates of the two
-diagnostic tests.
+A data frame with one row per estimator: \code{bias} and its Monte Carlo
+standard error \code{mcse_bias}, \code{rmse}, the Monte Carlo standard deviation
+\code{mc_sd}, the mean analytic standard error \code{mean_se}, and \code{coverage95} of the
+nominal 95\\% interval built from the analytic standard error. The rejection
+rates of the two diagnostic tests at the 5\\% level are stored in the attribute
+\code{"tests"} (\code{attr(x, "tests")}).
 }
 \description{
-Monte Carlo evaluation of the estimators
+Repeats \code{\link[=pc_simulate]{pc_simulate()}} and \code{\link[=pc_estimate]{pc_estimate()}} and summarises each estimator
+against its own estimand: the population PCE for IPW, the survivor PCE among
+respondents at \code{t + 1} for SSM, and the survivor PCE otherwise.
+}
+\examples{
+set.seed(1)
+mc <- pc_montecarlo(R = 20, n_old = 1000, n_new = 300, k = 4, regime = "MNAR_nonstat")
+mc
+attr(mc, "tests")
 }

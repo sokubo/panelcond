@@ -4,30 +4,40 @@
 \alias{pc_increment}
 \title{Incremental dose contrast between two continuing cohorts}
 \usage{
-pc_increment(A, B, kA, kB)
+pc_increment(A, B, kA, kB, nboot = 0)
 }
 \arguments{
 \item{A, B}{data frames with columns \code{y} (outcome at the comparison wave;
 \code{NA} for non-respondents), \code{y_entry} (outcome at the cohort's own entry wave,
-observed for all entrants) and \code{s} (1 if the unit responded at every wave up
-to and including the comparison wave).}
+observed for all entrants; \code{NA} for item non-response) and \code{s} (1 if the unit
+responded at every wave up to and including the comparison wave).}
 
-\item{kA, kB}{doses of the two cohorts at the comparison wave.}
+\item{kA, kB}{doses of the two cohorts at the comparison wave, \code{kA > kB}; used
+for labelling only.}
+
+\item{nboot}{number of replications of the joint person bootstrap (persons
+resampled within each cohort); \code{0} gives analytic standard errors only.}
 }
 \value{
-A list with \code{naive_diff} (difference of survivors' means, with SE),
-\code{ec_diff} (entry-corrected increment, with SE), the two selection
-differentials, and \code{info}.
+An object of class \code{pc_increment}: a list with \code{naive_diff} (difference
+of survivors' means, with SE and p), \code{ec_diff} (entry-corrected increment,
+with SE and p), the two selection differentials \code{delta}, and \code{info}. With
+\code{nboot > 0} each contrast also carries \code{se_boot} and \code{p_boot}.
 }
 \description{
 When two cohorts were drawn from the same target population at different
 entry waves (for example an original sample and a cohort-matched refreshment
 sample), their survivors at a later wave carry different doses \eqn{k_A > k_B}.
 Applying the entry-wave correction to each cohort with its own entry wave
-identifies the increment \eqn{\tau^S(k_A) - \tau^S(k_B)} without any fresh
-cohort at the comparison wave. This is the design used when a later
+identifies the increment \eqn{\tau^{S_A}(k_A) - \tau^{S_B}(k_B)} without any
+fresh cohort at the comparison wave. This is the design used when a later
 refreshment sample targets a different population and cannot serve as a
 dose-0 control.
+}
+\details{
+The analytic SE of the increment adds the two cohorts' first-order
+variances of \eqn{\bar Y_t^S - \bar Y_c^S + \bar Y_c} (see \code{\link[=pc_estimate]{pc_estimate()}});
+there is no fresh-arm term.
 }
 \examples{
 set.seed(2)

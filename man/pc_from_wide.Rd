@@ -4,34 +4,60 @@
 \alias{pc_from_wide}
 \title{Build estimation inputs from a wide panel}
 \usage{
-pc_from_wide(data, cohort, resp, y_cols, t, c_old, c_new = t, x = NULL)
+pc_from_wide(
+  data,
+  cohort,
+  resp,
+  y_cols,
+  t,
+  c_old,
+  c_new = t,
+  x = NULL,
+  id = NULL
+)
 }
 \arguments{
-\item{data}{wide data frame.}
+\item{data}{wide data frame, one row per person.}
 
 \item{cohort}{name of the column giving the entry wave of each person (integer
-wave number).}
+wave number). Rows whose entry wave is neither \code{c_old} nor \code{c_new} are
+ignored, as are fresh-cohort rows without a response at \code{t}.}
 
-\item{resp}{character vector of column names of response indicators (0/1),
-one per wave in wave order, e.g. \code{paste0("r_w", 1:19)}.}
+\item{resp}{character vector of column names of response indicators (0/1;
+\code{NA} is read as 0), one per wave in wave order, e.g. \code{paste0("r_w", 1:19)}.}
 
 \item{y_cols}{named character vector of outcome columns by wave, e.g.
-\code{c("5" = "dq10_1", "1" = "zq13_1")}; must contain the comparison wave and the
+\code{c("1" = "y_w1", "5" = "y_w5")}; must contain the comparison wave and the
 continuing cohort's entry wave.}
 
 \item{t}{comparison wave.}
 
-\item{c_old}{entry wave of the continuing cohort.}
+\item{c_old}{entry wave of the continuing cohort, \code{c_old < t}.}
 
 \item{c_new}{entry wave of the fresh cohort (normally \code{t}).}
 
 \item{x}{optional name of a discrete covariate column for IPW.}
+
+\item{id}{optional name of a person identifier column; duplicated identifiers
+are an error.}
 }
 \value{
 A list with \code{old}, \code{new}, \code{k = t - c_old} and \code{m} (the number of
-follow-up waves available for the fresh cohort, capped at \code{k}).
+follow-up waves available for the fresh cohort, capped at \code{k}). Waves after
+the last wave with any response are treated as not yet fielded: \code{s_next} and
+\code{s_m1} are \code{NA} when the required waves are unavailable.
 }
 \description{
 Converts a wide data frame (one row per person) with per-wave response
 indicators into the \code{old} and \code{new} inputs of \code{\link[=pc_estimate]{pc_estimate()}}.
+}
+\examples{
+set.seed(3)
+n <- 400; R <- matrix(rbinom(n * 8, 1, 0.9), n, 8); R[1:200, 1:3] <- 0L
+wide <- data.frame(id = 1:n, entry = c(rep(4L, 200), rep(1L, 200)))
+for (w in 1:8) wide[[paste0("r_w", w)]] <- R[, w]
+wide$y_w1 <- rnorm(n); wide$y_w4 <- rnorm(n)
+inp <- pc_from_wide(wide, cohort = "entry", resp = paste0("r_w", 1:8),
+                    y_cols = c("1" = "y_w1", "4" = "y_w4"), t = 4, c_old = 1, id = "id")
+pc_estimate(inp$old, inp$new, k = inp$k, m = inp$m)
 }

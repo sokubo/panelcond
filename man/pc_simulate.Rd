@@ -17,11 +17,13 @@ pc_simulate(
 )
 }
 \arguments{
-\item{n_old, n_new}{cohort sizes.}
+\item{n_old, n_new}{cohort sizes (positive integers).}
 
-\item{k}{dose of the continuing cohort at the comparison wave.}
+\item{k}{dose of the continuing cohort at the comparison wave (positive integer).}
 
-\item{m}{matched follow-up waves for the fresh cohort (default \code{k}).}
+\item{m}{matched follow-up waves available for the fresh cohort, \verb{0 <= m <= k}
+(default \code{k}). When \code{m < k} the symmetric design is infeasible and \code{s_m1} is
+returned as \code{NA}.}
 
 \item{regime}{one of \code{"MCAR"}, \code{"MAR_X"}, \code{"MNAR_trait"}, \code{"MNAR_nonstat"},
 \code{"MNAR_state"}, or a named list with elements \code{aX}, \code{aU}, \code{aE}, \code{shift_old}.}
@@ -31,7 +33,8 @@ pc_simulate(
 \value{
 A list with \code{old}, \code{new} (ready for \code{\link[=pc_estimate]{pc_estimate()}}), \code{truth} (the
 population PCE, the survivor PCE among the continuing cohort's respondents,
-and the survivor PCE among those who also respond at \code{t + 1}), \code{k}, \code{m}.
+the survivor PCE among those who also respond at \code{t + 1}, and \code{tau(k)}), \code{k},
+\code{m}.
 }
 \description{
 Data-generating process of the paper's Monte Carlo study: a fixed observed
@@ -39,4 +42,10 @@ covariate \code{x}, a persistent unobserved trait \code{u}, independent per-wave
 transients, a saturating dose-response \code{tau(k) = tau_inf * (1 - exp(-k/kappa))}
 with heterogeneity \code{tau_i = tau(k) * (1 + gam * u)}, and per-wave response
 decisions with dropout logit \code{a0 + aX*x + (aU + shift)*u + aE*eps_w}.
+}
+\examples{
+set.seed(1)
+sim <- pc_simulate(n_old = 1000, n_new = 300, k = 4, regime = "MNAR_state")
+sim$truth
+str(sim$old)
 }

@@ -4,31 +4,48 @@
 \alias{pc_estimate}
 \title{Estimate the panel conditioning effect with a refreshment sample}
 \usage{
-pc_estimate(old, new, k, m = k)
+pc_estimate(old, new, k, m = k, adjust = NULL, nboot = 0)
 }
 \arguments{
 \item{old}{data frame for the continuing cohort with columns \code{y} (outcome at the
 comparison wave \code{t}; \code{NA} for non-respondents), \code{y_entry} (outcome at the
-cohort's entry wave, observed for every entrant), \code{s_prior} (1 if the unit
-responded at every wave up to and including \code{t}), \code{s_next} (1 if the unit also
-responds at \code{t + 1}; may be \code{NA} if unavailable) and, optionally, \code{x} (a
-discrete covariate for IPW).}
+cohort's entry wave, observed for every entrant; \code{NA} for item non-response),
+\code{s_prior} (1 if the unit responded at every wave up to and including \code{t}),
+\code{s_next} (1 if the unit also responds at \code{t + 1}; may be \code{NA} if unavailable)
+and, optionally, \code{x} (a discrete covariate for IPW).}
 
-\item{new}{data frame for the fresh cohort with columns \code{y} (first-wave outcome),
-\code{s_m} (1 if the unit responds at \verb{t + 1, ..., t + m} with \code{m = k}) and,
-optionally, \code{s_m1} (1 if the unit responds through \code{t + k + 1}).}
+\item{new}{data frame for the fresh cohort with columns \code{y} (first-wave outcome;
+\code{NA} for item non-response), \code{s_m} (1 if the unit responds at
+\verb{t + 1, ..., t + m} with \code{m = k}) and, optionally, \code{s_m1} (1 if the unit
+responds through \code{t + k + 1}; may be \code{NA} if unavailable).}
 
 \item{k}{number of prior interviews of the continuing cohort at the comparison
-wave (the dose).}
+wave (the dose); a positive integer.}
 
 \item{m}{number of matched follow-up waves actually available for SM; defaults
 to \code{k}. When \code{m < k} the SM estimate is flagged as partial.}
+
+\item{adjust}{optional character vector naming numeric covariate columns present
+in both \code{old} and \code{new} (for example sex, birth year, education at entry). The
+entry-wave differential and the fresh-cohort mean are then standardised by
+linear regression to the survivors' covariate distribution (EC-adj). Rows with
+a missing covariate are not allowed.}
+
+\item{nboot}{number of replications of the joint person bootstrap (persons
+resampled with replacement within each cohort; every estimator and both
+diagnostic differences recomputed in each replicate). \code{0} (the default) gives
+analytic standard errors only. Call \code{set.seed()} beforehand for reproducibility.}
 }
 \value{
 An object of class \code{pc_estimate}: a list with \code{estimates} (data frame:
-estimator, estimate, se, n_old, n_new), \code{decomposition} (naive, conditioning =
-SM, attrition = naive - SM), \code{delta_entry} (entry-wave selection differential),
-\code{tests} (T1, T2 with two-sided p-values), and \code{info}.
+estimator, estimate, se, n_old, n_new, and \code{se_boot} when \code{nboot > 0}),
+\code{decomposition} (naive, conditioning = SM, attrition = naive - SM),
+\code{delta_entry} (entry-wave selection differential), \code{tests} (T1, T2 with
+two-sided p-values from the analytic denominators and, when \code{nboot > 0}, from
+the bootstrap denominators), and \code{info} (k, m, whether SM is partial, the share
+of the continuing cohort with an observed wave-\code{t} answer, the arm means, the
+number of entry-wave pairs and the counts of rows dropped for item
+non-response). IPW and EC-adj have no analytic standard error; use \code{nboot}.
 }
 \description{
 Given the continuing cohort's respondents at the comparison wave and the fresh
@@ -36,20 +53,29 @@ cohort's first-wave respondents, computes five estimators of the panel
 conditioning effect (PCE) at dose \eqn{k}: the naive contrast, survival matching
 (SM), symmetric survival matching (SSM), the entry-wave correction (EC), and,
 when \code{old$x} is supplied, attrition inverse-probability weighting on \code{x} (IPW).
-Also returns the decomposition of the naive contrast, the two diagnostic
+With \code{adjust} the regression-standardised entry-wave correction (EC-adj) is
+added. Also returns the decomposition of the naive contrast, the two diagnostic
 statistics \eqn{T_1} (SM vs EC; detects non-stationary attrition) and
 \eqn{T_2} (SSM vs SM; detects state-dependent attrition), and the entry-wave
 selection differential.
 }
 \details{
-The estimators are described in Okubo (2026), "Panel conditioning as a
-dose-response causal effect". All variances are analytic: independent-sample
-formulas for the contrasts, the paired formula for EC, and the share-weighted
-formulas of Appendix A.7 for the diagnostic statistics.
+The estimators are those of Okubo (2026), "Panel conditioning as a
+dose-response causal effect". Analytic variances are first-order:
+independent-sample formulas for the contrasts; for EC the variance of
+\eqn{\bar Y_t^S - (1-p)\bar Y_c^S + (1-p)\bar Y_c^{NS} - \bar Y_t^0}, with
+\eqn{p} the survivors' share, which keeps the within-person covariance of the
+survivors' two answers; and share-weighted formulas over disjoint groups for
+the diagnostic statistics. IPW uses the survival share within each level of
+\code{x}, floored at 0.02. Rows of \code{old} with \code{s_prior = 1} but \code{y} missing are
+treated as non-survivors; rows with \code{y_entry} missing enter neither the
+differential nor its variance. A message reports these counts.
 }
 \examples{
 set.seed(1)
 sim <- pc_simulate(n_old = 2000, n_new = 500, k = 4, regime = "MNAR_trait")
 fit <- pc_estimate(sim$old, sim$new, k = 4)
 fit
+## joint person bootstrap and covariate adjustment on x
+pc_estimate(sim$old, sim$new, k = 4, adjust = "x", nboot = 50)
 }

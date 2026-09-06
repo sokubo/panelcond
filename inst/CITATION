@@ -1,0 +1,18 @@
+citHeader("To cite panelcond in publications use:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "panelcond: Refreshment-Sample Designs for Panel Conditioning",
+  author  = person("Shoki", "Okubo", comment = c(ORCID = "0009-0007-6925-5174")),
+  year    = "2026",
+  note    = "R package version 0.1.2",
+  url     = "https://github.com/sokubo/panelcond"
+)
+
+bibentry(
+  bibtype = "Unpublished",
+  title   = "Panel conditioning as a dose-response causal effect: identification with refreshment samples",
+  author  = person("Shoki", "Okubo"),
+  year    = "2026",
+  note    = "Working paper"
+)

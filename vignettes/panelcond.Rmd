@@ -1,0 +1,120 @@
+---
+title: "Estimating panel conditioning with a refreshment sample"
+author: "Shoki Okubo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Estimating panel conditioning with a refreshment sample}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+A panel survey that adds a refreshment sample can compare respondents who have
+been interviewed $k$ times (the continuing cohort) with first-time respondents
+drawn from the same population (the fresh cohort) at the same wave. The
+difference is the panel conditioning effect of dose $k$ among the continuing
+cohort's survivors, provided the fresh cohort is a valid control. This vignette
+runs the designs of the package on simulated data. The notation and the
+identification results are those of Okubo (2026), "Panel conditioning as a
+dose-response causal effect: identification with refreshment samples".
+
+## Data layout
+
+`pc_estimate()` takes two data frames. `old` has one row per member of the
+continuing cohort with the wave-$t$ answer `y` (`NA` for non-respondents), the
+cohort's own entry-wave answer `y_entry`, the survival indicator `s_prior`
+(responded at every wave from entry to $t$), optionally `s_next` (responds at
+$t+1$) and a discrete covariate `x`. `new` has one row per first-wave respondent
+of the fresh cohort with `y`, `s_m` (responds at the $m = k$ waves after $t$)
+and optionally `s_m1` (responds at $k + 1$ further waves). `pc_from_wide()`
+builds both from a wide file with per-wave response indicators.
+
+`pc_simulate()` generates both cohorts from the data-generating process of the
+paper's Monte Carlo study. Under the `MNAR_trait` regime, dropout depends on an
+unobserved persistent trait that also enters the outcome, so the survivors are a
+selected group and the naive contrast is biased.
+
+```{r}
+library(panelcond)
+set.seed(1)
+sim <- pc_simulate(n_old = 4800, n_new = 960, k = 4, regime = "MNAR_trait")
+sim$truth
+```
+
+`pce_surv` is the estimand of the naive, survival-matched and entry-corrected
+designs (the effect among the continuing cohort's survivors); `pce_surv_next` is
+the estimand of the symmetric design; `pce_pop` is the population effect that
+IPW targets.
+
+## Estimates and diagnostics
+
+```{r}
+fit <- pc_estimate(sim$old, sim$new, k = 4, adjust = "x", nboot = 200)
+fit
+```
+
+The naive contrast is biased downward by the survivors' selection differential
+(reported as `entry-wave selection differential`); survival matching (`sm`),
+symmetric survival matching (`ssm`), the entry-wave correction (`ec`) and its
+regression-standardised version (`ec_adj`) recover the survivor effect. The
+`se` column holds the first-order analytic standard errors; `se_boot` the joint
+person bootstrap, in which persons are resampled within each cohort and every
+estimator is recomputed, so that the diagnostic differences $T_1$ (SM against
+EC) and $T_2$ (SSM against SM) receive bootstrap denominators as well. In this
+regime attrition is stationary and depends on the trait, not on the current
+state, so SM, SSM and EC share the same estimand up to a small composition term
+and both tests have their nominal size. $T_1$ does not reject; $T_2$ falls at
+the 5% boundary in this particular draw, which is a rejection at the nominal
+error rate, not evidence of state dependence (the Monte Carlo section below
+shows the rejection rates under a regime where state dependence is present).
+
+## Sensitivity
+
+`pc_bounds()` gives worst-case bounds on the population effect, obtained by
+assigning the non-survivors the endpoints of the outcome's support, and the
+breakdown values of the two main designs: the SM estimate in fresh-cohort
+standard-deviation units, and the additive drift in the selection differential
+at which the EC estimate vanishes or its 95% interval reaches zero.
+
+```{r}
+pc_bounds(fit, y_range = c(-4, 4), sd_new = sd(sim$new$y))
+```
+
+## Two continuing cohorts
+
+When a later refreshment sample targets a different population it cannot serve
+as a dose-0 control, but two continuing cohorts drawn from the same population
+at different entry waves identify the increment between their doses, each
+corrected by its own entry wave.
+
+```{r}
+set.seed(2)
+a <- pc_simulate(n_old = 4800, n_new = 10, k = 12, regime = "MNAR_trait")
+b <- pc_simulate(n_old = 960,  n_new = 10, k = 8,  regime = "MNAR_trait")
+inc <- pc_increment(data.frame(y = a$old$y, y_entry = a$old$y_entry, s = a$old$s_prior),
+                    data.frame(y = b$old$y, y_entry = b$old$y_entry, s = b$old$s_prior),
+                    kA = 12, kB = 8, nboot = 200)
+inc
+a$truth[["pce_surv"]] - b$truth[["pce_surv"]]
+```
+
+## Design planning
+
+`pc_montecarlo()` repeats the simulation and reports, for each estimator, the
+bias against its own estimand, the Monte Carlo standard deviation, the mean
+analytic standard error and the coverage of the nominal 95% interval; the
+rejection rates of the two diagnostic tests are attached as an attribute.
+
+```{r}
+set.seed(3)
+mc <- pc_montecarlo(R = 100, n_old = 4800, n_new = 960, k = 4, regime = "MNAR_state")
+print(mc, digits = 3)
+attr(mc, "tests")
+```
+
+Under state-dependent attrition, survival matching and the entry-wave
+correction are biased by the same amount and $T_1$ cannot see it, whereas the
+symmetric design is unbiased and $T_2$ rejects.
