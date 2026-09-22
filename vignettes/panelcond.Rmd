@@ -18,8 +18,9 @@ drawn from the same population (the fresh cohort) at the same wave. The
 difference is the panel conditioning effect of dose $k$ among the continuing
 cohort's survivors, provided the fresh cohort is a valid control. This vignette
 runs the designs of the package on simulated data. The notation and the
-identification results are those of Okubo (2026), "Panel conditioning as a
-dose-response causal effect: identification with refreshment samples".
+identification results are those of two companion manuscripts by the author, one
+on refreshment-sample designs and one on identification in staggered panels, both
+in preparation; see `citation("panelcond")`.
 
 ## Data layout
 

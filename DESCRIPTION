@@ -1,19 +1,22 @@
 Package: panelcond
 Type: Package
 Title: Refreshment-Sample Designs for Panel Conditioning
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: person("Shoki", "Okubo", email = "okubo080@toyo.jp", role = c("aut", "cre"),
                   comment = c(ORCID = "0009-0007-6925-5174"))
 Description: Estimates the panel conditioning effect (the causal effect of prior
     interviews on a wave-specific survey answer) from a panel with a refreshment
     sample. Implements the naive contrast, survival matching, symmetric survival
-    matching, the entry-wave correction (with an optional regression-standardised
-    version) and attrition inverse-probability weighting; the incremental dose
+    matching, the entry-wave correction of Das, Toepoel and van Soest (2011)
+    reinterpreted as a survivor-effect estimator (with an optional
+    regression-standardised version) and attrition inverse-probability weighting; the incremental dose
     contrast between two continuing cohorts; the decomposition of the naive
     contrast into conditioning and attrition components; two diagnostic tests
     that distinguish state-dependent from non-stationary attrition; a joint
     person bootstrap; worst-case bounds and breakdown values; and a simulation
-    engine for design planning. No dependencies beyond base R.
+    engine for design planning; and a design-rank calculator that reports, before
+    fielding, which functionals of the conditioning path a refreshment schedule
+    identifies. No dependencies beyond base R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 URL: https://github.com/sokubo/panelcond
@@ -24,3 +27,4 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0
+RoxygenNote: 7.3.1

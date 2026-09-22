@@ -60,8 +60,8 @@ statistics \eqn{T_1} (SM vs EC; detects non-stationary attrition) and
 selection differential.
 }
 \details{
-The estimators are those of Okubo (2026), "Panel conditioning as a
-dose-response causal effect". Analytic variances are first-order:
+The estimators are those of a companion manuscript by the author on
+refreshment-sample designs, in preparation. Analytic variances are first-order:
 independent-sample formulas for the contrasts; for EC the variance of
 \eqn{\bar Y_t^S - (1-p)\bar Y_c^S + (1-p)\bar Y_c^{NS} - \bar Y_t^0}, with
 \eqn{p} the survivors' share, which keeps the within-person covariance of the

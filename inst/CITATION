@@ -5,14 +5,11 @@ bibentry(
   title   = "panelcond: Refreshment-Sample Designs for Panel Conditioning",
   author  = person("Shoki", "Okubo", comment = c(ORCID = "0009-0007-6925-5174")),
   year    = "2026",
-  note    = "R package version 0.1.2",
+  note    = "R package version 0.1.3",
   url     = "https://github.com/sokubo/panelcond"
 )
 
-bibentry(
-  bibtype = "Unpublished",
-  title   = "Panel conditioning as a dose-response causal effect: identification with refreshment samples",
-  author  = person("Shoki", "Okubo"),
-  year    = "2026",
-  note    = "Working paper"
-)
+citFooter("The methods the package implements are described in two companion manuscripts, ",
+          "one on identification in staggered panels (the design-rank calculator) and one on ",
+          "refreshment-sample designs (the estimators). Both are in preparation; this entry ",
+          "will name their preprints once they are posted.")

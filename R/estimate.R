@@ -43,8 +43,8 @@
 #'   of the continuing cohort with an observed wave-`t` answer, the arm means, the
 #'   number of entry-wave pairs and the counts of rows dropped for item
 #'   non-response). IPW and EC-adj have no analytic standard error; use `nboot`.
-#' @details The estimators are those of Okubo (2026), "Panel conditioning as a
-#'   dose-response causal effect". Analytic variances are first-order:
+#' @details The estimators are those of a companion manuscript by the author on
+#'   refreshment-sample designs, in preparation. Analytic variances are first-order:
 #'   independent-sample formulas for the contrasts; for EC the variance of
 #'   \eqn{\bar Y_t^S - (1-p)\bar Y_c^S + (1-p)\bar Y_c^{NS} - \bar Y_t^0}, with
 #'   \eqn{p} the survivors' share, which keeps the within-person covariance of the

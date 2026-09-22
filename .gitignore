@@ -3,3 +3,4 @@
 .RData
 *.tar.gz
 *.Rcheck/
+.DS_Store
