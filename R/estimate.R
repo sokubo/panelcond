@@ -44,15 +44,26 @@
 #'   number of entry-wave pairs and the counts of rows dropped for item
 #'   non-response). IPW and EC-adj have no analytic standard error; use `nboot`.
 #' @details The estimators are those of a companion manuscript by the author on
-#'   refreshment-sample designs, in preparation. Analytic variances are first-order:
-#'   independent-sample formulas for the contrasts; for EC the variance of
-#'   \eqn{\bar Y_t^S - (1-p)\bar Y_c^S + (1-p)\bar Y_c^{NS} - \bar Y_t^0}, with
-#'   \eqn{p} the survivors' share, which keeps the within-person covariance of the
-#'   survivors' two answers; and share-weighted formulas over disjoint groups for
-#'   the diagnostic statistics. IPW uses the survival share within each level of
-#'   `x`, floored at 0.02. Rows of `old` with `s_prior = 1` but `y` missing are
-#'   treated as non-survivors; rows with `y_entry` missing enter neither the
-#'   differential nor its variance. A message reports these counts.
+#'   refreshment-sample designs, in preparation. Each estimator is a difference of
+#'   subset means within two independent cohorts. The analytic standard errors of
+#'   the entry-wave correction and of the two diagnostic differences are
+#'   first-order influence-function variances: the mean of `v` over a subset `B`
+#'   of a cohort of size `n` has influence function `B (v - mean_B) n / |B|`, the
+#'   influence functions of the subset means entering an estimator are combined
+#'   within each cohort, and the variance is the sum over the two cohorts of
+#'   `sum(IF^2) / n^2`. Because this accounts for the estimated group shares, the
+#'   variance of EC contains the term
+#'   \eqn{p(1-p)(\mu_{E,S}-\mu_{E,NS})^2/n_{old}}, which versions up to 0.1.3
+#'   omitted (they treated the survivors' share \eqn{p} as fixed and so
+#'   understated the variance when the entry means of survivors and non-survivors
+#'   differ); the diagnostics contain the analogous share terms. The naive, SM and
+#'   SSM contrasts use independent-sample formulas, which agree with their
+#'   influence-function variances to first order. The joint person bootstrap
+#'   (`nboot`) recomputes every arm and every share in each replicate. IPW uses the
+#'   survival share within each level of `x`, floored at 0.02. Rows of `old` with
+#'   `s_prior = 1` but `y` missing are treated as non-survivors; rows with
+#'   `y_entry` missing enter neither the differential nor its variance. A message
+#'   reports these counts.
 #' @examples
 #' set.seed(1)
 #' sim <- pc_simulate(n_old = 2000, n_new = 500, k = 4, regime = "MNAR_trait")
@@ -141,7 +152,10 @@ pc_point <- function(old, new, adjust = NULL) {
   n_s <- length(ent_s); n_ns <- length(ent_ns); p_s <- n_s / (n_s + n_ns)
   delta <- mean0(ent_s) - mean0(c(ent_s, ent_ns))
   ec <- (mean0(yo) - delta) - mean0(yn)
-  se_ec <- sqrt(ec_var_cont(old$y[io & eobs], ent_s, ent_ns) + vm(yn))
+  ## influence functions of the subset means (continuing cohort: rows of `old`; fresh cohort: rows of `new`)
+  if_yS <- if_mean(old$y, io); if_eS <- if_mean(old$y_entry, io & eobs); if_e <- if_mean(old$y_entry, eobs)
+  if_n <- if_mean(new$y, yobs); if_nm <- if_mean(new$y, nm)
+  se_ec <- sqrt(v_if(if_yS - if_eS + if_e) + v_if(if_n))
   ## symmetric survival matching and T2 (SSM vs SM)
   ssm <- se_ssm <- T2 <- NA_real_; n_ssm_old <- n_ssm_new <- NA_integer_
   if ("s_next" %in% names(old) && "s_m1" %in% names(new) && any(!is.na(old$s_next)) && any(!is.na(new$s_m1))) {
@@ -149,18 +163,11 @@ pc_point <- function(old, new, adjust = NULL) {
     m1 <- nm & !is.na(new$s_m1) & new$s_m1 == 1L; yn_m1 <- new$y[m1]
     ssm <- mean0(yo_s) - mean0(yn_m1); se_ssm <- sqrt(vm(yo_s) + vm(yn_m1))
     n_ssm_old <- length(yo_s); n_ssm_new <- length(yn_m1)
-    yo_ns <- old$y[io & !is.na(old$s_next) & old$s_next == 0L]
-    r_s <- length(yo_s) / (length(yo_s) + length(yo_ns))
-    v_old2 <- (1 - r_s)^2 * (vm(yo_s) + var0(yo_ns) / max(length(yo_ns), 2))
-    y_d1 <- new$y[nm & !m1]; q1 <- sum(m1) / sum(nm)
-    v_fr2 <- (1 - q1)^2 * (var0(y_d1) / max(length(y_d1), 2) + vm(yn_m1))
-    T2 <- (ssm - sm) / sqrt(v_old2 + v_fr2)
+    ## SSM - SM = (Ybar over io1 - Ybar over io) - (Ybar over m1 - Ybar over nm)
+    T2 <- (ssm - sm) / sqrt(v_if(if_mean(old$y, io1) - if_yS) + v_if(if_mean(new$y, m1) - if_nm))
   }
-  ## T1 (SM vs EC); the fresh shares are taken among respondents with an observed answer
-  v_delta <- (1 - p_s)^2 * (var0(ent_s) / max(n_s, 2) + var0(ent_ns) / max(n_ns, 2))
-  y_nm <- new$y[yobs & !nm]; q_m <- sum(nm) / sum(yobs)
-  v_fresh <- (1 - q_m)^2 * (var0(y_nm) / max(length(y_nm), 2) + vm(yn_m))
-  T1 <- (sm - ec) / sqrt(v_delta + v_fresh)
+  ## T1 (SM vs EC): SM - EC = (Ebar over io & eobs - Ebar over eobs) - (Ybar over nm - Ybar over yobs)
+  T1 <- (sm - ec) / sqrt(v_if(if_eS - if_e) + v_if(if_nm - if_n))
   ## IPW on x: survivors reweighted by the inverse survival share of their x level
   ipw <- NA_real_
   if ("x" %in% names(old)) {
@@ -186,17 +193,17 @@ pc_point <- function(old, new, adjust = NULL) {
        T1 = unname(T1), T2 = unname(T2), delta = delta, mean_old = mean0(yo), mean_new = mean0(yn), n_pairs = n_s)
 }
 
-## first-order variance of the continuing-cohort part of the entry-wave estimator,
-## Ybar_t^S - Ybar_c^S + Ybar_c = Ybar_t^S - (1 - p) Ybar_c^S + (1 - p) Ybar_c^NS,
-## from the survivors' pairs (y_s, e_s) and the non-survivors' entry answers e_ns
-ec_var_cont <- function(y_s, e_s, e_ns) {
-  ok <- !is.na(y_s) & !is.na(e_s); ys <- y_s[ok]; es <- e_s[ok]; ens <- e_ns[!is.na(e_ns)]
-  n_s <- length(ys); n_ns <- length(ens); p <- n_s / (n_s + n_ns)
-  if (n_s < 2) return(NA_real_)
-  v_s <- (stats::var(ys) - 2 * (1 - p) * stats::cov(ys, es) + (1 - p)^2 * stats::var(es)) / n_s
-  v_ns <- if (n_ns >= 2) (1 - p)^2 * stats::var(ens) / n_ns else 0
-  v_s + v_ns
+## influence function of the mean of v over the rows in B (B logical over all rows of a cohort; v may be NA
+## outside B): B (v - mean_B) n / |B|, zero outside B.  NA when B is empty.
+if_mean <- function(v, B) {
+  B <- B & !is.na(v); nb <- sum(B)
+  if (nb == 0) return(rep(NA_real_, length(B)))
+  out <- numeric(length(B)); vb <- v[B]; out[B] <- (vb - mean(vb)) * length(B) / nb
+  out
 }
+
+## first-order variance of a within-cohort linear combination of subset means, from its influence function
+v_if <- function(IF) if (anyNA(IF) || length(IF) < 2) NA_real_ else sum(IF^2) / length(IF)^2
 
 ## least-squares fit of y on Xfit (complete cases), averaged prediction over the rows of Xpred
 ols_pred <- function(y, Xfit, Xpred) {

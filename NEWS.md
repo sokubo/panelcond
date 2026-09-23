@@ -1,3 +1,31 @@
+# panelcond 0.1.4
+
+* **Standard errors of the entry-wave correction (EC) and of the diagnostics
+  corrected.** Versions up to 0.1.3 computed the analytic variance of EC
+  conditionally on the survivors' share of the entrants, omitting the
+  first-order term `p (1 - p) (mean entry answer of survivors - mean entry
+  answer of non-survivors)^2 / n_old` that comes from estimating that share;
+  the variances of `T1` (SM vs EC) and `T2` (SSM vs SM) omitted the analogous
+  share terms. The omission is negligible when survivors and non-survivors have
+  similar entry means and large when they differ: with entry answers `U + N(0, 0.1^2)`,
+  `U ~ Bernoulli(0.5)` and survival `S = U` in both cohorts (500 entrants each,
+  no conditioning), the 0.1.3 intervals for EC covered 0.84 and `T1` rejected a
+  true null 70% of the time. `pc_estimate()` and `pc_increment()` now use
+  influence-function variances that include the estimated shares (coverage 0.95,
+  rejection 0.05 in the same design); see `?pc_estimate`, Details. The joint
+  person bootstrap (`nboot`), which recomputes every share, was not affected.
+  The internal `ec_var_cont()` is replaced by `if_mean()` and `v_if()`.
+* `print.pc_design()` no longer tells the user to follow the last cohort longer
+  when the follow-up condition of Lemma 1 fails but the identified set already
+  has dimension `d`: with more than three cohorts the condition is sufficient,
+  not necessary (for entries 1, 5, 6, 9 and `t_max = 9` the last cohort has no
+  follow-up and the identified set is the affine line).
+* `DESCRIPTION` no longer carries a `Config/roxygen2/version` field.
+* New tests: the exact counterexample `E = S`, `Y = 1` among survivors,
+  constant fresh outcome (EC equals the survival share, whose variance is
+  `p (1 - p) / n`), and agreement of the analytic variances with their
+  closed forms in a two-group design.
+
 # panelcond 0.1.3
 
 * New `pc_design_rank()` and `pc_is_identified()`: build the cell-mean design of

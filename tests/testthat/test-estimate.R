@@ -30,20 +30,50 @@ test_that("decomposition identity and bounds hold", {
   expect_error(pc_bounds(f, y_range = c(0, 1, 2)), "two")
 })
 
-test_that("the EC standard error is the first-order variance over disjoint groups", {
+test_that("the EC standard error is the influence-function variance, share term included", {
   set.seed(16)
   s <- pc_simulate(n_old = 1500, n_new = 400, k = 4, regime = "MNAR_trait")
   f <- pc_estimate(s$old, s$new, k = 4)
-  old <- s$old; io <- old$s_prior == 1 & !is.na(old$y)
+  vp <- function(x) mean((x - mean(x))^2)                     # variance with divisor n (influence-function form)
+  old <- s$old; io <- old$s_prior == 1 & !is.na(old$y); n <- nrow(old)
   yo <- old$y[io]; es <- old$y_entry[io]; ens <- old$y_entry[!io]
-  p <- sum(io) / nrow(old)
-  v <- (var(yo) - 2 * (1 - p) * cov(yo, es) + (1 - p)^2 * var(es)) / sum(io) + (1 - p)^2 * var(ens) / sum(!io) + var(s$new$y) / nrow(s$new)
+  p <- sum(io) / n; dl <- mean(es) - mean(ens)
+  v <- vp(yo - (1 - p) * es) / sum(io) + (1 - p)^2 * vp(ens) / sum(!io) + p * (1 - p) * dl^2 / n + vp(s$new$y) / nrow(s$new)
   expect_equal(f$estimates$se[f$estimates$estimator == "ec"], sqrt(v))
-  ## a perfectly persistent outcome and a constant fresh outcome: the variance is that of the cohort's entry mean
+  ## a perfectly persistent outcome and a constant fresh outcome: EC is the cohort's entry mean minus a constant,
+  ## so its variance is Var(entry) / n, which includes the between-group term p (1 - p) dl^2
   old2 <- old; old2$y[io] <- old2$y_entry[io]; new2 <- s$new; new2$y <- 1
   f2 <- pc_estimate(old2, new2, k = 4)
-  expect_equal(f2$estimates$se[f2$estimates$estimator == "ec"]^2, (p * var(es) + (1 - p) * var(ens)) / nrow(old))
+  expect_equal(f2$estimates$se[f2$estimates$estimator == "ec"]^2, vp(old$y_entry) / n)
+  expect_equal(vp(old$y_entry) / n, (p * vp(es) + (1 - p) * vp(ens) + p * (1 - p) * dl^2) / n)
   expect_equal(f2$estimates$estimate[f2$estimates$estimator == "ec"], mean(old$y_entry) - 1)
+})
+
+test_that("exact counterexample: EC equals the survival share and its variance is p(1 - p)/n", {
+  set.seed(3)
+  n <- 1000; S <- rbinom(n, 1, 0.4)
+  old <- data.frame(y = ifelse(S == 1, 1, NA), y_entry = S, s_prior = S, s_next = 1L)
+  new <- data.frame(y = rep(0, 200), s_m = 1L, s_m1 = 1L)
+  f <- pc_estimate(old, new, k = 1)
+  p <- mean(S)
+  expect_equal(f$estimates$estimate[f$estimates$estimator == "ec"], p)
+  expect_equal(f$estimates$se[f$estimates$estimator == "ec"]^2, p * (1 - p) / n)
+})
+
+test_that("the diagnostic variances include the share terms", {
+  set.seed(21)
+  n <- 600; uo <- rbinom(n, 1, .5); un <- rbinom(n, 1, .5)
+  eo <- uo + rnorm(n, sd = .1); en <- un + rnorm(n, sd = .1)
+  old <- data.frame(y = ifelse(uo == 1, eo, NA), y_entry = eo, s_prior = uo, s_next = 1L)
+  new <- data.frame(y = en, s_m = un, s_m1 = un)
+  f <- pc_estimate(old, new, k = 1)
+  vp <- function(x) mean((x - mean(x))^2)
+  p <- mean(uo); q <- mean(un)
+  v_old <- (1 - p)^2 * (vp(eo[uo == 1]) / sum(uo) + vp(eo[uo == 0]) / sum(1 - uo)) + p * (1 - p) * (mean(eo[uo == 1]) - mean(eo[uo == 0]))^2 / n
+  v_new <- (1 - q)^2 * (vp(en[un == 1]) / sum(un) + vp(en[un == 0]) / sum(1 - un)) + q * (1 - q) * (mean(en[un == 1]) - mean(en[un == 0]))^2 / n
+  d1 <- f$estimates$estimate[f$estimates$estimator == "sm"] - f$estimates$estimate[f$estimates$estimator == "ec"]
+  expect_equal(f$tests$statistic[1], d1 / sqrt(v_old + v_new))
+  expect_lt(abs(f$tests$statistic[1]), 4)                      # a true null with well-separated groups
 })
 
 test_that("item non-response is reported, T1 stays finite and indicators are checked", {
@@ -118,8 +148,9 @@ test_that("pc_increment recovers the dose increment and its SE has no fresh-arm 
   inc <- pc_increment(A, B, kA = 12, kB = 8, nboot = 50)
   truth <- a$truth[["pce_surv"]] - b$truth[["pce_surv"]]
   expect_lt(abs(inc$ec_diff[["estimate"]] - truth), 3 * inc$ec_diff[["se"]] + 0.02)
-  vc <- function(D) { i <- D$s == 1 & !is.na(D$y); p <- mean(i)
-    (var(D$y[i]) - 2 * (1 - p) * cov(D$y[i], D$y_entry[i]) + (1 - p)^2 * var(D$y_entry[i])) / sum(i) + (1 - p)^2 * var(D$y_entry[!i]) / sum(!i) }
+  vp <- function(x) mean((x - mean(x))^2)
+  vc <- function(D) { i <- D$s == 1 & !is.na(D$y); p <- mean(i); dl <- mean(D$y_entry[i]) - mean(D$y_entry[!i])
+    vp(D$y[i] - (1 - p) * D$y_entry[i]) / sum(i) + (1 - p)^2 * vp(D$y_entry[!i]) / sum(!i) + p * (1 - p) * dl^2 / nrow(D) }
   expect_equal(inc$ec_diff[["se"]], sqrt(vc(A) + vc(B)))
   expect_lt(abs(inc$ec_diff[["se_boot"]] / inc$ec_diff[["se"]] - 1), 0.3)
   expect_warning(pc_increment(A, B, kA = 8, kB = 12), "should exceed")

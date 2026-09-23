@@ -57,7 +57,10 @@
 #'   and hold for common-end trapezoids: there the
 #'   identified set has dimension exactly `d` whenever the last cohort is
 #'   observed for at least `(e_2 - e_1) - d` waves after its entry, and with three
-#'   cohorts the dimension is `max(d, (e_2 - e_1) - w)` for every `t_max`. Both
+#'   cohorts the dimension is `max(d, (e_2 - e_1) - w)` for every `t_max`. With
+#'   more than three cohorts the follow-up condition is sufficient but not
+#'   necessary (earlier cohorts can supply what the last one lacks), and
+#'   `max(d, (e_2 - e_1) - w)` is an upper bound. Both
 #'   are reported as `NA` for supports that are not trapezoids. Use
 #'   [pc_is_identified()] to test a specific functional.
 #' @examples
@@ -153,7 +156,9 @@ print.pc_design <- function(x, ...) {
   } else if (!is.na(s$followup_condition)) {
     cat(sprintf("Follow-up of last cohort w = %d; condition w >= (e_2 - e_1) - d %s%s.\n", s$followup_w,
                 if (isTRUE(s$followup_condition)) "holds" else "fails",
-                if (isTRUE(s$followup_condition)) "" else ": follow the last cohort longer"))
+                if (isTRUE(s$followup_condition)) ""
+                else if (isTRUE(s$identified_equals_d)) ", but the identified set already has dimension d (the condition is sufficient, not necessary, with more than three cohorts)"
+                else ": following the last cohort longer is one way to shrink the identified set"))
   }
   invisible(x)
 }

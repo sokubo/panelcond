@@ -36,8 +36,9 @@ dose-0 control.
 }
 \details{
 The analytic SE of the increment adds the two cohorts' first-order
-variances of \eqn{\bar Y_t^S - \bar Y_c^S + \bar Y_c} (see \code{\link[=pc_estimate]{pc_estimate()}});
-there is no fresh-arm term.
+influence-function variances of \eqn{\bar Y_t^S - \bar Y_c^S + \bar Y_c}
+(see \code{\link[=pc_estimate]{pc_estimate()}}), which include the estimated survival shares; there is
+no fresh-arm term.
 }
 \examples{
 set.seed(2)

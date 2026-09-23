@@ -61,15 +61,26 @@ selection differential.
 }
 \details{
 The estimators are those of a companion manuscript by the author on
-refreshment-sample designs, in preparation. Analytic variances are first-order:
-independent-sample formulas for the contrasts; for EC the variance of
-\eqn{\bar Y_t^S - (1-p)\bar Y_c^S + (1-p)\bar Y_c^{NS} - \bar Y_t^0}, with
-\eqn{p} the survivors' share, which keeps the within-person covariance of the
-survivors' two answers; and share-weighted formulas over disjoint groups for
-the diagnostic statistics. IPW uses the survival share within each level of
-\code{x}, floored at 0.02. Rows of \code{old} with \code{s_prior = 1} but \code{y} missing are
-treated as non-survivors; rows with \code{y_entry} missing enter neither the
-differential nor its variance. A message reports these counts.
+refreshment-sample designs, in preparation. Each estimator is a difference of
+subset means within two independent cohorts. The analytic standard errors of
+the entry-wave correction and of the two diagnostic differences are
+first-order influence-function variances: the mean of \code{v} over a subset \code{B}
+of a cohort of size \code{n} has influence function \verb{B (v - mean_B) n / |B|}, the
+influence functions of the subset means entering an estimator are combined
+within each cohort, and the variance is the sum over the two cohorts of
+\code{sum(IF^2) / n^2}. Because this accounts for the estimated group shares, the
+variance of EC contains the term
+\eqn{p(1-p)(\mu_{E,S}-\mu_{E,NS})^2/n_{old}}, which versions up to 0.1.3
+omitted (they treated the survivors' share \eqn{p} as fixed and so
+understated the variance when the entry means of survivors and non-survivors
+differ); the diagnostics contain the analogous share terms. The naive, SM and
+SSM contrasts use independent-sample formulas, which agree with their
+influence-function variances to first order. The joint person bootstrap
+(\code{nboot}) recomputes every arm and every share in each replicate. IPW uses the
+survival share within each level of \code{x}, floored at 0.02. Rows of \code{old} with
+\code{s_prior = 1} but \code{y} missing are treated as non-survivors; rows with
+\code{y_entry} missing enter neither the differential nor its variance. A message
+reports these counts.
 }
 \examples{
 set.seed(1)

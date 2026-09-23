@@ -72,7 +72,10 @@ companion manuscript on identification in staggered panels (in preparation)
 and hold for common-end trapezoids: there the
 identified set has dimension exactly \code{d} whenever the last cohort is
 observed for at least \code{(e_2 - e_1) - d} waves after its entry, and with three
-cohorts the dimension is \code{max(d, (e_2 - e_1) - w)} for every \code{t_max}. Both
+cohorts the dimension is \code{max(d, (e_2 - e_1) - w)} for every \code{t_max}. With
+more than three cohorts the follow-up condition is sufficient but not
+necessary (earlier cohorts can supply what the last one lacks), and
+\code{max(d, (e_2 - e_1) - w)} is an upper bound. Both
 are reported as \code{NA} for supports that are not trapezoids. Use
 \code{\link[=pc_is_identified]{pc_is_identified()}} to test a specific functional.
 }

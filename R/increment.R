@@ -22,8 +22,9 @@
 #'   with SE and p), the two selection differentials `delta`, and `info`. With
 #'   `nboot > 0` each contrast also carries `se_boot` and `p_boot`.
 #' @details The analytic SE of the increment adds the two cohorts' first-order
-#'   variances of \eqn{\bar Y_t^S - \bar Y_c^S + \bar Y_c} (see [pc_estimate()]);
-#'   there is no fresh-arm term.
+#'   influence-function variances of \eqn{\bar Y_t^S - \bar Y_c^S + \bar Y_c}
+#'   (see [pc_estimate()]), which include the estimated survival shares; there is
+#'   no fresh-arm term.
 #' @examples
 #' set.seed(2)
 #' a <- pc_simulate(n_old = 3000, n_new = 10, k = 12, regime = "MNAR_trait")$old
@@ -52,7 +53,7 @@ pc_increment <- function(A, B, kA, kB, nboot = 0) {
     y <- D$y[i]; e_s <- D$y_entry[i & eobs]; e_ns <- D$y_entry[!i & eobs]
     delta <- mean(e_s) - mean(c(e_s, e_ns))
     list(m = mean(y), v_m = if (length(y) >= 2) stats::var(y) / length(y) else NA_real_, delta = delta,
-         v_ec = ec_var_cont(D$y[i & eobs], e_s, e_ns), n = length(y), n_pairs = length(e_s))
+         v_ec = v_if(if_mean(D$y, i) - if_mean(D$y_entry, i & eobs) + if_mean(D$y_entry, eobs)), n = length(y), n_pairs = length(e_s))
   }
   point <- function(A, B) { a <- one(A); b <- one(B); c(naive = a$m - b$m, ec = (a$m - a$delta) - (b$m - b$delta)) }
   a <- one(A); b <- one(B)
