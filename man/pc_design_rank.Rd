@@ -68,7 +68,8 @@ disconnected support, knowledge of the cohort effects \eqn{g} therefore need
 not pin the path down. Every staggered trapezoid is connected.
 
 The follow-up condition and the three-cohort formula are Lemma 1 of the
-companion manuscript on identification in staggered panels (in preparation)
+companion paper on identification in staggered panels (Okubo 2026,
+arXiv:2609.28871, version 1)
 and hold for common-end trapezoids: there the
 identified set has dimension exactly \code{d} whenever the last cohort is
 observed for at least \code{(e_2 - e_1) - d} waves after its entry, and with three

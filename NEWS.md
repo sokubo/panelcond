@@ -1,3 +1,14 @@
+# panelcond 0.1.5
+
+* Documentation only; no function, default or result changes. The companion
+  paper on identification in staggered panels, whose Lemma 1 the design-rank
+  calculator implements, is now posted as arXiv:2609.28871 (Okubo 2026,
+  *Panel Conditioning in Fixed-Effects Models: Identification and Bias Propagation*).
+  `citation("panelcond")`, the README, the vignette, `DESCRIPTION` and
+  `?pc_design_rank` cite it; the lemma numbers refer to its version 1.
+* The package entry of `citation("panelcond")` now takes its version from
+  `DESCRIPTION` (in 0.1.4 it still read 0.1.3).
+
 # panelcond 0.1.4
 
 * **Standard errors of the entry-wave correction (EC) and of the diagnostics
