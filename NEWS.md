@@ -1,3 +1,26 @@
+# panelcond 0.1.6
+
+* **EC-adj integrates both regression terms over one covariate distribution.**
+  Versions up to 0.1.5 averaged the entry-wave residual over the survivors with
+  an observed entry answer and the fresh-cohort prediction over all survivors
+  with an observed wave-`t` answer. When the two groups differ (survivors whose
+  entry answer is missing, or a subgroup design in which eligibility at entry
+  differs from eligibility at the comparison wave), equal conditional selection
+  terms do not imply a zero bias: in a sixteen-type population with no
+  conditioning, equal selection terms within each covariate value and a correct
+  raw correction, the 0.1.5 estimator returns 1/12. `pc_point()` now takes the
+  entry-wave selection term as the difference between the entry regression
+  fitted on the survivors with an entry answer and the one fitted on every
+  entrant with an entry answer, integrated, like the fresh prediction, over the
+  survivors with an observed wave-`t` answer; see `?pc_estimate`, Details. The
+  estimate is unchanged whenever every survivor has an observed entry answer.
+  The unadjusted estimators, the diagnostics and the variances are unchanged.
+* New tests: the sixteen-type population above (EC and EC-adj zero, the former
+  rule 1/12), and two populations in which item completion at entry or in the
+  fresh cohort depends on the answer (both corrections -1/2 and +1/6 with no
+  conditioning), which document that standardisation does not remove the
+  item-completion assumptions.
+
 # panelcond 0.1.5
 
 * Documentation only; no function, default or result changes. The companion

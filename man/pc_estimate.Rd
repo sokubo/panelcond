@@ -27,9 +27,10 @@ to \code{k}. When \code{m < k} the SM estimate is flagged as partial.}
 
 \item{adjust}{optional character vector naming numeric covariate columns present
 in both \code{old} and \code{new} (for example sex, birth year, education at entry). The
-entry-wave differential and the fresh-cohort mean are then standardised by
-linear regression to the survivors' covariate distribution (EC-adj). Rows with
-a missing covariate are not allowed.}
+entry-wave selection term and the fresh-cohort mean are then standardised by
+linear regression to the covariate distribution of the survivors with an
+observed wave-\code{t} answer (EC-adj; see Details). Rows with a missing covariate
+are not allowed.}
 
 \item{nboot}{number of replications of the joint person bootstrap (persons
 resampled with replacement within each cohort; every estimator and both
@@ -81,6 +82,30 @@ survival share within each level of \code{x}, floored at 0.02. Rows of \code{old
 \code{s_prior = 1} but \code{y} missing are treated as non-survivors; rows with
 \code{y_entry} missing enter neither the differential nor its variance. A message
 reports these counts.
+
+\strong{EC-adj.} Write \eqn{T} for the survivors with an observed wave-\code{t} answer,
+\eqn{P} for those of them with an observed entry answer, \eqn{E} for every
+entrant with an observed entry answer and \eqn{F} for the fresh respondents
+with an observed answer, and let \eqn{m_P}, \eqn{m_E} and \eqn{m_F} be the
+least-squares fits of \code{y_entry} on the covariates over \eqn{P} and over
+\eqn{E}, and of the fresh \code{y} over \eqn{F}. The estimator is
+\deqn{\bar Y_T - \overline{(m_P - m_E)}_T - \overline{m_F}_T,}
+every average being taken over \eqn{T}: the unadjusted correction EC with the
+entry-wave selection term and the fresh mean replaced by regression
+predictions integrated over one covariate distribution, that of \eqn{T}. It
+equals the survivors' conditioning effect when, within every covariate value,
+the selection term of the entry answer among \eqn{P} equals that of the
+latent wave-\code{t} answer among \eqn{T}, the item completions at entry and in
+the fresh cohort are representative within covariate values, and the fitted
+regressions are correctly specified (or, with linear projections, the
+corresponding statement holds on average over \eqn{T}); for covariate values
+of \eqn{T} outside the range of \eqn{P} the entry fit is extrapolated. When
+every survivor has an observed entry answer, \eqn{P = T} and the estimator
+coincides with that of versions up to 0.1.5, which averaged the entry
+residual over \eqn{P} and the fresh prediction over \eqn{T}: two covariate
+distributions, under which equal conditional selection terms do not imply a
+zero bias (a sixteen-type population with no conditioning and equal
+conditional selection terms gives 1/12; see the package tests).
 }
 \examples{
 set.seed(1)

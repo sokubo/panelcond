@@ -27,9 +27,10 @@
 #'   to `k`. When `m < k` the SM estimate is flagged as partial.
 #' @param adjust optional character vector naming numeric covariate columns present
 #'   in both `old` and `new` (for example sex, birth year, education at entry). The
-#'   entry-wave differential and the fresh-cohort mean are then standardised by
-#'   linear regression to the survivors' covariate distribution (EC-adj). Rows with
-#'   a missing covariate are not allowed.
+#'   entry-wave selection term and the fresh-cohort mean are then standardised by
+#'   linear regression to the covariate distribution of the survivors with an
+#'   observed wave-`t` answer (EC-adj; see Details). Rows with a missing covariate
+#'   are not allowed.
 #' @param nboot number of replications of the joint person bootstrap (persons
 #'   resampled with replacement within each cohort; every estimator and both
 #'   diagnostic differences recomputed in each replicate). `0` (the default) gives
@@ -64,6 +65,30 @@
 #'   `s_prior = 1` but `y` missing are treated as non-survivors; rows with
 #'   `y_entry` missing enter neither the differential nor its variance. A message
 #'   reports these counts.
+#'
+#'   **EC-adj.** Write \eqn{T} for the survivors with an observed wave-`t` answer,
+#'   \eqn{P} for those of them with an observed entry answer, \eqn{E} for every
+#'   entrant with an observed entry answer and \eqn{F} for the fresh respondents
+#'   with an observed answer, and let \eqn{m_P}, \eqn{m_E} and \eqn{m_F} be the
+#'   least-squares fits of `y_entry` on the covariates over \eqn{P} and over
+#'   \eqn{E}, and of the fresh `y` over \eqn{F}. The estimator is
+#'   \deqn{\bar Y_T - \overline{(m_P - m_E)}_T - \overline{m_F}_T,}
+#'   every average being taken over \eqn{T}: the unadjusted correction EC with the
+#'   entry-wave selection term and the fresh mean replaced by regression
+#'   predictions integrated over one covariate distribution, that of \eqn{T}. It
+#'   equals the survivors' conditioning effect when, within every covariate value,
+#'   the selection term of the entry answer among \eqn{P} equals that of the
+#'   latent wave-`t` answer among \eqn{T}, the item completions at entry and in
+#'   the fresh cohort are representative within covariate values, and the fitted
+#'   regressions are correctly specified (or, with linear projections, the
+#'   corresponding statement holds on average over \eqn{T}); for covariate values
+#'   of \eqn{T} outside the range of \eqn{P} the entry fit is extrapolated. When
+#'   every survivor has an observed entry answer, \eqn{P = T} and the estimator
+#'   coincides with that of versions up to 0.1.5, which averaged the entry
+#'   residual over \eqn{P} and the fresh prediction over \eqn{T}: two covariate
+#'   distributions, under which equal conditional selection terms do not imply a
+#'   zero bias (a sixteen-type population with no conditioning and equal
+#'   conditional selection terms gives 1/12; see the package tests).
 #' @examples
 #' set.seed(1)
 #' sim <- pc_simulate(n_old = 2000, n_new = 500, k = 4, regime = "MNAR_trait")
@@ -177,14 +202,22 @@ pc_point <- function(old, new, adjust = NULL) {
     iw <- io & xok
     ipw <- sum(w[iw] * old$y[iw]) / sum(w[iw]) - mean0(yn)
   }
-  ## EC-adj: regression standardisation of the entry differential and the fresh mean to the survivors' covariates
+  ## EC-adj: regression standardisation to the survivors' covariates. Every term is an average over the
+  ## survivors with an observed wave-t answer (io): the fresh regression function, and the entry-wave selection
+  ## term as the difference between the entry regression function fitted on the survivors with an observed entry
+  ## answer (io & eobs) and the one fitted on every entrant with an observed entry answer (eobs). Versions up to
+  ## 0.1.5 averaged the entry residual over io & eobs and the fresh prediction over io, two different covariate
+  ## distributions when survivors lack entry answers (or, in a subgroup design, were not eligible at entry); the
+  ## two estimators coincide when every survivor has an observed entry answer.
   ec_adj <- NA_real_
   if (!is.null(adjust)) {
     Xo <- cbind(1, as.matrix(old[adjust]) * 1); Xn <- cbind(1, as.matrix(new[adjust]) * 1)
     ip <- io & eobs
-    m_c <- ols_pred(old$y_entry, Xo, Xo[ip, , drop = FALSE])
+    y_p <- old$y_entry; y_p[!ip] <- NA
+    m_p <- ols_pred(y_p, Xo, Xo[io, , drop = FALSE])
+    m_c <- ols_pred(old$y_entry, Xo, Xo[io, , drop = FALSE])
     m_0 <- ols_pred(new$y, Xn, Xo[io, , drop = FALSE])
-    ec_adj <- mean0(yo) - (mean0(ent_s) - m_c) - m_0
+    ec_adj <- mean0(yo) - (m_p - m_c) - m_0
   }
   list(est = c(naive = naive, sm = sm, ssm = ssm, ec = ec, ec_adj = ec_adj, ipw = ipw),
        se = c(naive = se_naive, sm = se_sm, ssm = se_ssm, ec = se_ec, ec_adj = NA_real_, ipw = NA_real_),

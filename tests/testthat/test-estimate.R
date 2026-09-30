@@ -169,3 +169,43 @@ test_that("pc_simulate marks the symmetric design infeasible when m < k and chec
   expect_error(pc_simulate(n_old = 50, n_new = 20, k = 2, m = 3), "between 0 and k")
   expect_error(pc_montecarlo(R = 0, n_old = 50, n_new = 20, k = 2), "positive integer")
 })
+
+test_that("EC-adj integrates both regression terms over the survivors' covariates (three exact population fixtures)", {
+  ## Sixteen equally likely types (X, U, V, W), each Bernoulli(1/2). Survival S = U 1{X = 1 or V = 1}; entry
+  ## eligibility G_e = 1{X = 0 or W = 1}; no conditioning: Y_t = Y_t* = X U; entry answer Y_e = X U + X/2 where
+  ## eligible. Fresh cohort: the same population law, everyone answers. The unadjusted entry-wave selection term
+  ## equals the current one (5/12), and within each value of X both equal X/2, so the raw correction is exact.
+  ## The covariate distributions of the survivors (P(X = 1) = 2/3) and of the survivors with an entry answer
+  ## (P(X = 1) = 1/2) differ; averaging the entry residual over the latter and the fresh prediction over the former
+  ## (versions up to 0.1.5) gives 1/12 for a true effect of zero; one covariate distribution gives zero.
+  z <- expand.grid(x = 0:1, u = 0:1, v = 0:1, w = 0:1)
+  S <- as.integer(z$u == 1 & (z$x == 1 | z$v == 1)); Ge <- z$x == 0 | z$w == 1
+  yt <- z$x * z$u; ye <- z$x * z$u + z$x / 2; ye[!Ge] <- NA
+  old <- data.frame(y = yt, y_entry = ye, s_prior = S, x = z$x)
+  new <- data.frame(y = yt, s_m = 1L, x = z$x)
+  f <- suppressMessages(pc_estimate(old, new, k = 4, adjust = "x"))
+  e <- f$estimates
+  expect_equal(e$estimate[e$estimator == "ec"], 0, tolerance = 1e-12)
+  expect_equal(e$estimate[e$estimator == "ec_adj"], 0, tolerance = 1e-12)
+  io <- S == 1L; ip <- io & !is.na(ye); Xo <- cbind(1, z$x)
+  old_rule <- mean(yt[io]) - (mean(ye[ip]) - ols_pred(ye, Xo, Xo[ip, , drop = FALSE])) - ols_pred(yt, Xo, Xo[io, , drop = FALSE])
+  expect_equal(old_rule, 1 / 12, tolerance = 1e-12)
+  ## Item completion at entry that depends on the answer (Y_e = Y_t, S = U independent of Y, the entry answer
+  ## observed only when Y = U): both corrections are -1/2 with no conditioning. The entry completion assumption
+  ## is not removable by standardisation.
+  z2 <- expand.grid(y = 0:1, u = 0:1, v = 0:1, w = 0:1)
+  ye2 <- z2$y; ye2[z2$y != z2$u] <- NA
+  old2 <- data.frame(y = z2$y, y_entry = ye2, s_prior = as.integer(z2$u == 1), x = z2$w)
+  new2 <- data.frame(y = z2$y, s_m = 1L, x = z2$w)
+  e2 <- suppressMessages(pc_estimate(old2, new2, k = 4, adjust = "x"))$estimates
+  expect_equal(e2$estimate[e2$estimator == "ec"], -1 / 2, tolerance = 1e-12)
+  expect_equal(e2$estimate[e2$estimator == "ec_adj"], -1 / 2, tolerance = 1e-12)
+  ## Fresh item completion that depends on the answer (fresh entrants with Y = 1 answer with probability 1/2):
+  ## both corrections are +1/6 with no conditioning.
+  yn3 <- z2$y; yn3[z2$y == 1 & z2$v == 0] <- NA
+  new3 <- data.frame(y = yn3, s_m = 1L, x = z2$w)
+  old3 <- data.frame(y = z2$y, y_entry = z2$y, s_prior = as.integer(z2$u == 1), x = z2$w)
+  e3 <- suppressMessages(pc_estimate(old3, new3, k = 4, adjust = "x"))$estimates
+  expect_equal(e3$estimate[e3$estimator == "ec"], 1 / 6, tolerance = 1e-12)
+  expect_equal(e3$estimate[e3$estimator == "ec_adj"], 1 / 6, tolerance = 1e-12)
+})
