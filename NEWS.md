@@ -1,3 +1,13 @@
+# panelcond 0.1.7
+
+* Documentation only; no function, default or result changes. The companion
+  paper on refreshment-sample designs, whose estimators, diagnostics and
+  variance formulas this package implements, is now posted as arXiv:2610.01654
+  (Okubo 2026, *Identifying Panel Conditioning with Refreshment Samples: Sharp
+  Bounds and Design Assumptions*; its Section 10 was computed with version
+  0.1.6). `citation("panelcond")` now lists the package and both papers; the
+  README, the vignette, `DESCRIPTION` and `?pc_estimate` cite it.
+
 # panelcond 0.1.6
 
 * **EC-adj integrates both regression terms over one covariate distribution.**

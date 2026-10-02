@@ -61,8 +61,11 @@ statistics \eqn{T_1} (SM vs EC; detects non-stationary attrition) and
 selection differential.
 }
 \details{
-The estimators are those of a companion manuscript by the author on
-refreshment-sample designs, in preparation. Each estimator is a difference of
+The estimators are those of Okubo (2026), \emph{Identifying Panel
+Conditioning with Refreshment Samples: Sharp Bounds and Design Assumptions}
+(arXiv:2610.01654, version 1; its Section 7 states the designs and their
+restrictions, Section 8 the diagnostics and its Appendix on variances the
+standard errors). Each estimator is a difference of
 subset means within two independent cohorts. The analytic standard errors of
 the entry-wave correction and of the two diagnostic differences are
 first-order influence-function variances: the mean of \code{v} over a subset \code{B}

@@ -53,10 +53,13 @@ pc_increment(data.frame(y = a$y, y_entry = a$y_entry, s = a$s_prior),
 The vignette (`vignette("panelcond")`) walks through the designs on simulated
 data. `pc_design_rank()` / `pc_is_identified()` implement the identification
 results of Okubo (2026), *Panel Conditioning in Fixed-Effects Models: Identification and Bias Propagation*,
-[arXiv:2609.28871](https://arxiv.org/abs/2609.28871). The estimators come from a
-companion manuscript on refreshment-sample designs, which is in preparation.
-`citation("panelcond")` gives the package and the posted paper, and will add the
-second once it is posted.
+[arXiv:2609.28871](https://arxiv.org/abs/2609.28871). The estimators, the
+diagnostics and the variance formulas are those of Okubo (2026), *Identifying Panel
+Conditioning with Refreshment Samples: Sharp Bounds and Design Assumptions*,
+[arXiv:2610.01654](https://arxiv.org/abs/2610.01654), whose Section 10 was computed
+with version 0.1.6 of this package (replication archive:
+[paper-refreshment-designs-replication](https://github.com/sokubo/paper-refreshment-designs-replication),
+tag `paper-v1.5`). `citation("panelcond")` gives the package and both papers.
 
 ## Design planning
 

@@ -1,5 +1,6 @@
-citHeader("To cite panelcond in publications, please cite the package and, for the design-rank ",
-          "calculator, the paper whose identification results it implements:")
+citHeader("To cite panelcond in publications, please cite the package and the paper whose estimators ",
+          "and diagnostics it implements (Okubo 2026, arXiv:2610.01654); the design-rank calculator ",
+          "implements the identification results of the second paper (arXiv:2609.28871):")
 
 bibentry(
   bibtype = "Manual",
@@ -12,6 +13,15 @@ bibentry(
 
 bibentry(
   bibtype      = "Misc",
+  title        = "Identifying Panel Conditioning with Refreshment Samples: Sharp Bounds and Design Assumptions",
+  author       = person("Shoki", "Okubo", comment = c(ORCID = "0009-0007-6925-5174")),
+  year         = "2026",
+  howpublished = "arXiv preprint arXiv:2610.01654",
+  url          = "https://arxiv.org/abs/2610.01654"
+)
+
+bibentry(
+  bibtype      = "Misc",
   title        = "Panel Conditioning in Fixed-Effects Models: Identification and Bias Propagation",
   author       = person("Shoki", "Okubo", comment = c(ORCID = "0009-0007-6925-5174")),
   year         = "2026",
@@ -19,5 +29,3 @@ bibentry(
   url          = "https://arxiv.org/abs/2609.28871"
 )
 
-citFooter("The estimators are described in a companion manuscript on refreshment-sample designs, ",
-          "in preparation; this entry will name its preprint once it is posted.")

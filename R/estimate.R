@@ -44,8 +44,11 @@
 #'   of the continuing cohort with an observed wave-`t` answer, the arm means, the
 #'   number of entry-wave pairs and the counts of rows dropped for item
 #'   non-response). IPW and EC-adj have no analytic standard error; use `nboot`.
-#' @details The estimators are those of a companion manuscript by the author on
-#'   refreshment-sample designs, in preparation. Each estimator is a difference of
+#' @details The estimators are those of Okubo (2026), *Identifying Panel
+#'   Conditioning with Refreshment Samples: Sharp Bounds and Design Assumptions*
+#'   (arXiv:2610.01654, version 1; its Section 7 states the designs and their
+#'   restrictions, Section 8 the diagnostics and its Appendix on variances the
+#'   standard errors). Each estimator is a difference of
 #'   subset means within two independent cohorts. The analytic standard errors of
 #'   the entry-wave correction and of the two diagnostic differences are
 #'   first-order influence-function variances: the mean of `v` over a subset `B`
